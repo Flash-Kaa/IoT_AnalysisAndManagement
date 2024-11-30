@@ -1,47 +1,40 @@
-package com.flasska.presentation
+package com.flasska.iotam
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import com.flasska.iotam.navigation.NavGraph
 import com.flasska.iotam.ui.theme.IoTAnalysisAndManagementTheme
+import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseOptions
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        FirebaseApp.initializeApp(
+            this, FirebaseOptions.Builder()
+                .setApplicationId("1:1234567890:android:abc123def456")
+                .setDatabaseUrl("URL Realtime Database")
+                .build()
+        )
+
         setContent {
             IoTAnalysisAndManagementTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                Scaffold {
+                    Box(
+                        modifier = Modifier.padding(it)
+                    ) {
+                        NavGraph()
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    IoTAnalysisAndManagementTheme {
-        Greeting("Android")
     }
 }
