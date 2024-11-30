@@ -20,7 +20,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "IoT analysis and management"
-include(":app")
 include(":app:data")
 include(":app:domain")
-include(":app:presentation")
+include(":app")
