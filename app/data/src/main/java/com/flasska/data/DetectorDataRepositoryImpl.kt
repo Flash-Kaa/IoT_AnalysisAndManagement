@@ -26,27 +26,29 @@ class DetectorDataRepositoryImpl : DetectorDataRepository {
             object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     snapshot.getValue<HashMap<String, DetectorDataFirebase>>()?.values?.let { ddfs ->
-                        val newValue = ddfs.mapNotNull { ddf ->
-                            val actuatorState = ActuatorState.deserialize(ddf.actuatorState)
-                            val tempActuatorState =
-                                TemperatureActuatorState.deserialize(ddf.temperatureActuatorState)
+                        val newValue = ddfs.sortedBy { it.time }
+                            .takeLast(15)
+                            .mapNotNull { ddf ->
+                                val actuatorState = ActuatorState.deserialize(ddf.actuatorState)
+                                val tempActuatorState =
+                                    TemperatureActuatorState.deserialize(ddf.temperatureActuatorState)
 
-                            if (actuatorState != null && tempActuatorState != null) {
-                                DetectorData(
-                                    insideTemperature = ddf.insideTemperature,
-                                    outsideTemperature = ddf.outsideTemperature,
-                                    actuatorState = actuatorState,
-                                    temperatureActuatorState = tempActuatorState,
-                                    dateTime = LocalDateTime.ofEpochSecond(
-                                        ddf.time,
-                                        0,
-                                        ZoneOffset.UTC
+                                if (actuatorState != null && tempActuatorState != null) {
+                                    DetectorData(
+                                        insideTemperature = ddf.insideTemperature,
+                                        outsideTemperature = ddf.outsideTemperature,
+                                        actuatorState = actuatorState,
+                                        temperatureActuatorState = tempActuatorState,
+                                        dateTime = LocalDateTime.ofEpochSecond(
+                                            ddf.time,
+                                            0,
+                                            ZoneOffset.UTC
+                                        )
                                     )
-                                )
-                            } else {
-                                null
+                                } else {
+                                    null
+                                }
                             }
-                        }.sortedBy { it.dateTime }
 
                         _state.update { newValue }
                     }

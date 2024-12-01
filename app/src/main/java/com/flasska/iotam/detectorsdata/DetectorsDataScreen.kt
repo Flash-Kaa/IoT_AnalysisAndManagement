@@ -86,7 +86,7 @@ internal fun DetectorsScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        Graphic(screenState.history.takeLast(15))
+        Graphic(screenState.history)
     }
 }
 
