@@ -22,44 +22,52 @@ class DetectorDataRepositoryImpl : DetectorDataRepository {
     private val reference = FirebaseDatabase.getInstance().reference
 
     init {
-        reference.child("dataobjects").addValueEventListener(
-            object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    snapshot.getValue<HashMap<String, DetectorDataFirebase>>()?.values?.let { ddfs ->
-                        val newValue = ddfs.sortedBy { it.time }
-                            .takeLast(15)
-                            .mapNotNull { ddf ->
-                                val actuatorState = ActuatorState.deserialize(ddf.actuatorState)
-                                val tempActuatorState =
-                                    TemperatureActuatorState.deserialize(ddf.temperatureActuatorState)
-
-                                if (actuatorState != null && tempActuatorState != null) {
-                                    DetectorData(
-                                        insideTemperature = ddf.insideTemperature,
-                                        outsideTemperature = ddf.outsideTemperature,
-                                        actuatorState = actuatorState,
-                                        temperatureActuatorState = tempActuatorState,
-                                        dateTime = LocalDateTime.ofEpochSecond(
-                                            ddf.time,
-                                            0,
-                                            ZoneOffset.UTC
-                                        )
-                                    )
-                                } else {
-                                    null
-                                }
-                            }
-
-                        _state.update { newValue }
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {}
-            }
-        )
+        reference.child("dataobjects")
+            .addValueEventListener(
+                valueEventListener()
+            )
     }
 
     override suspend fun updateTemperatureActuatorState(value: TemperatureActuatorState) {
         reference.child("tas").setValue(value.name)
+    }
+
+    private fun valueEventListener() = object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+            snapshot.getValue<HashMap<String, DetectorDataFirebase>>()
+                ?.values?.let { ddfs ->
+                    val newValue = ddfs.sortedBy { it.time }
+                        .takeLast(15)
+                        .mapNotNull { ddf ->
+                            mapResponse(ddf)
+                        }
+
+                    _state.update { newValue }
+                }
+        }
+
+        override fun onCancelled(error: DatabaseError) {}
+    }
+
+    private fun mapResponse(ddf: DetectorDataFirebase): DetectorData? {
+        val actuatorState = ActuatorState.deserialize(ddf.actuatorState)
+        val tempActuatorState =
+            TemperatureActuatorState.deserialize(ddf.temperatureActuatorState)
+
+        return if (actuatorState != null && tempActuatorState != null) {
+            DetectorData(
+                insideTemperature = ddf.insideTemperature,
+                outsideTemperature = ddf.outsideTemperature,
+                actuatorState = actuatorState,
+                temperatureActuatorState = tempActuatorState,
+                dateTime = LocalDateTime.ofEpochSecond(
+                    ddf.time,
+                    0,
+                    ZoneOffset.UTC
+                )
+            )
+        } else {
+            null
+        }
     }
 }
